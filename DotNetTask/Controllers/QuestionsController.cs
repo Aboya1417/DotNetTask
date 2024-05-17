@@ -1,3 +1,5 @@
+using AutoMapper;
+using DotNetTask.Dtos;
 using DotNetTask.Models;
 using DotNetTask.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -9,10 +11,12 @@ namespace DotNetTask.Controllers;
 public class QuestionsController : ControllerBase
 {
     private readonly IQuestionRepository _questionRepository;
+    private readonly IMapper _mapper;
 
-    public QuestionsController(IQuestionRepository questionRepository)
+    public QuestionsController(IQuestionRepository questionRepository, IMapper mapper)
     {
         _questionRepository = questionRepository;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -35,22 +39,25 @@ public class QuestionsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateQuestion(Guid programId, [FromBody] Question question)
+    public async Task<IActionResult> CreateQuestion(Guid programId, [FromBody] QuestionDto question)
     {
         question.Id = Guid.NewGuid();
-        var createdQuestion = await _questionRepository.CreateQuestionForProgramAsync(programId, question);
+        var mappedQuestion = _mapper.Map<Question>(question);
+        var createdQuestion = await _questionRepository.CreateQuestionForProgramAsync(programId, mappedQuestion);
         return CreatedAtAction(nameof(GetQuestion), new { programId, questionId = createdQuestion.Id }, createdQuestion);
     }
 
     [HttpPut("{questionId}")]
-    public async Task<IActionResult> UpdateQuestion(Guid programId, Guid questionId, [FromBody] Question question)
+    public async Task<IActionResult> UpdateQuestion(Guid programId, Guid questionId, [FromBody] QuestionDto question)
     {
         if (questionId != question.Id)
         {
             return BadRequest();
         }
+        
+        var mappedQuestion = _mapper.Map<Question>(question);
 
-        var updatedQuestion = await _questionRepository.UpdateQuestionAsync(programId, question);
+        var updatedQuestion = await _questionRepository.UpdateQuestionAsync(programId, mappedQuestion);
         if (updatedQuestion == null)
         {
             return NotFound();

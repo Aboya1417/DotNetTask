@@ -1,5 +1,6 @@
 using DotNetTask.Models;
 using Microsoft.Azure.Cosmos;
+using static DotNetTask.Constants;
 
 namespace DotNetTask.Repositories;
 
@@ -7,9 +8,9 @@ public class ProgramRepository : IProgramRepository
 {
     private readonly Container _container;
 
-    public ProgramRepository(CosmosClient cosmosClient, string databaseName, string containerName)
+    public ProgramRepository(CosmosClient cosmosClient)
     {
-        _container = cosmosClient.GetContainer(databaseName, containerName);
+        _container = cosmosClient.GetContainer(DatabaseName, ProgramCollection);
     }
 
     public async Task<CreateProgram> GetProgramAsync(Guid id)

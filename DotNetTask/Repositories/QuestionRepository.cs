@@ -1,16 +1,21 @@
+using AutoMapper;
+using DotNetTask.Dtos;
 using DotNetTask.Models;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using static DotNetTask.Constants;
 
 namespace DotNetTask.Repositories;
 
 public class QuestionRepository : IQuestionRepository
 {
     private readonly Container _container;
+    private readonly IMapper _mapper;
 
-    public QuestionRepository(CosmosClient cosmosClient, string databaseName, string containerName)
+    public QuestionRepository(CosmosClient cosmosClient, string databaseName, string containerName, IMapper mapper)
     {
-        _container = cosmosClient.GetContainer(databaseName, containerName);
+        _mapper = mapper;
+        _container = cosmosClient.GetContainer(DatabaseName, QuestionCollection);
     }
 
     public async Task<IEnumerable<Question>> GetQuestionsForProgramAsync(Guid programId)
@@ -32,12 +37,14 @@ public class QuestionRepository : IQuestionRepository
         return questions;
     }
 
-    public async Task<Question> GetQuestionAsync(Guid programId, Guid questionId)
+    public async Task<QuestionDto> GetQuestionAsync(Guid programId, Guid questionId)
     {
         try
         {
             ItemResponse<Question> response = await _container.ReadItemAsync<Question>(questionId.ToString(), new PartitionKey(programId.ToString()));
-            return response.Resource;
+
+            var mappedResponse = _mapper.Map<QuestionDto>(response.Resource);
+            return mappedResponse;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {

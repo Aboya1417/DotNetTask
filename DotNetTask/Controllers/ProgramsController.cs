@@ -1,3 +1,5 @@
+using AutoMapper;
+using DotNetTask.Dtos;
 using DotNetTask.Models;
 using DotNetTask.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,7 @@ namespace DotNetTask.Controllers;
 public class ProgramsController : ControllerBase
 {
     private readonly IProgramRepository _programRepository;
+    private readonly IMapper _mapper;
 
     public ProgramsController(IProgramRepository programRepository)
     {
@@ -35,21 +38,24 @@ public class ProgramsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateProgram([FromBody] CreateProgram program)
+    public async Task<IActionResult> CreateProgram([FromBody] CreateProgramDto program)
     {
-        var createdProgram = await _programRepository.CreateProgramAsync(program);
+        var mappedProgram = _mapper.Map<CreateProgram>(program);
+        var createdProgram = await _programRepository.CreateProgramAsync(mappedProgram);
         return CreatedAtAction(nameof(GetProgram), new { id = createdProgram.Id }, createdProgram);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateProgram(Guid id, [FromBody] CreateProgram program)
+    public async Task<IActionResult> UpdateProgram(Guid id, [FromBody] CreateProgramDto program)
     {
         if (id != program.Id)
         {
             return BadRequest();
         }
 
-        var updatedProgram = await _programRepository.UpdateProgramAsync(program);
+        var mappedProgram = _mapper.Map<CreateProgram>(program);
+        
+        var updatedProgram = await _programRepository.UpdateProgramAsync(mappedProgram);
         return Ok(updatedProgram);
     }
 

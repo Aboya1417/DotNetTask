@@ -1,4 +1,6 @@
 using DotNetTask.Extensions;
+using Microsoft.Azure.Cosmos;
+using static DotNetTask.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +10,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.RegisterRepositories();
+
+builder.Services.AddSingleton<CosmosClient>(_ =>
+{
+    var connectionString = Environment.GetEnvironmentVariable("COSMOS_DB_CONNECTION_STRING");
+    return new CosmosClient(connectionString);
+});
 
 var app = builder.Build();
 
@@ -19,5 +27,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+using var serviceScope = app.Services.CreateScope();
+var cosmosClient = serviceScope.ServiceProvider.GetRequiredService<CosmosClient>();
+await cosmosClient.CreateDatabaseIfNotExistsAsync(DatabaseName);
 
 app.Run();
