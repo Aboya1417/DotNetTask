@@ -1,0 +1,6 @@
+@DotNetTask_HostAddress = http://localhost:5032
+
+GET {{DotNetTask_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
